@@ -3,10 +3,11 @@ package alpha
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/flypay/engineering-test/pkg/api/apiHandler"
 	"github.com/flypay/engineering-test/pkg/internal"
 	"github.com/flypay/engineering-test/pkg/service"
-	"net/http"
 )
 
 type getMenuCategoriesHandler struct {

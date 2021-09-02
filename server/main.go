@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/flypay/engineering-test/pkg/api/alpha"
-	"github.com/flypay/engineering-test/pkg/api/apiHandler"
-	"github.com/flypay/engineering-test/pkg/api/beta"
-	"github.com/flypay/engineering-test/pkg/api/orders"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+
+	"github.com/flypay/engineering-test/pkg/api/alpha"
+	"github.com/flypay/engineering-test/pkg/api/apiHandler"
+	"github.com/flypay/engineering-test/pkg/api/beta"
+	"github.com/flypay/engineering-test/pkg/api/orders"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -29,7 +31,6 @@ func main() {
 	}
 	go launchHTTPServer()
 	launchMuxServer(router)
-
 }
 
 func RegisterMux(router *mux.Router, handler apiHandler.Handler) *mux.Route {
@@ -64,10 +65,10 @@ func launchHTTPServer() {
 func launchMuxServer(router *mux.Router) {
 	port := 8085
 	server := &http.Server{
-		Addr:    fmt.Sprintf("http://localhost:%v", port),
+		Addr:    fmt.Sprintf(":%v", port),
 		Handler: HTTPMiddleware(router),
 	}
-	conn, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
+	conn, err := net.Listen("tcp", server.Addr)
 	if err != nil {
 		fmt.Printf("error listing to %v port, err: %s", port, err.Error())
 	}
@@ -78,9 +79,7 @@ func launchMuxServer(router *mux.Router) {
 }
 
 func createHTTPHandler(handler apiHandler.Handler) http.Handler {
-
 	hf := func(w http.ResponseWriter, r *http.Request) {
-
 		request, err := handler.ParseArgs(r)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -116,18 +115,16 @@ func createHTTPHandler(handler apiHandler.Handler) http.Handler {
 }
 
 // httpHandler fulfills the http.Handler interface, allowing us to use logging http middleware
-//
 type httpHandler struct {
 	serveHTTP http.HandlerFunc
 }
 
 // ServeHTTP calls through to the constructed function
-//
 func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.serveHTTP(w, r)
 }
 
-// HTTPMiddleware provides logging/tracing for incoming http requests.
+// HTTPMiddleware can provide logging/tracing for incoming http requests.
 func HTTPMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		h.ServeHTTP(w, request)

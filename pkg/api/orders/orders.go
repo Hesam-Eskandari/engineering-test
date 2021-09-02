@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/flypay/engineering-test/pkg/api/apiHandler"
-	"github.com/flypay/engineering-test/pkg/internal"
-	"github.com/flypay/engineering-test/pkg/service"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/flypay/engineering-test/pkg/api/apiHandler"
+	"github.com/flypay/engineering-test/pkg/internal"
+	"github.com/flypay/engineering-test/pkg/internal/schema"
+	"github.com/flypay/engineering-test/pkg/service"
 )
 
 type setOrderHandler struct {
@@ -36,7 +38,7 @@ func (h *setOrderHandler) Methods() []string {
 
 func (h *setOrderHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	fmt.Println("Parsing Args")
-	requestBody := &internal.OrderRequest{}
+	requestBody := &schema.OrderRequest{}
 	if err := DecodeReqRespBody(r.Body, requestBody); err != nil {
 		return r, fmt.Errorf("[orders] error decoding request body, error: %s", err.Error())
 	}
@@ -65,7 +67,7 @@ func (h *setOrderHandler) Process(r *http.Request) *http.Response {
 	return service.RequestClient(method, destination, body)
 }
 
-// DecodeReqRespBody decodes request arguments from request body
+// DecodeReqRespBody decodes request or response arguments from request/ response body
 func DecodeReqRespBody(body io.Reader, v interface{}) error {
 	if body == nil {
 		return errors.New("error decoding: body is nil")
@@ -86,88 +88,32 @@ func EncodeReqBody(body interface{}) (io.ReadCloser, error) {
 
 }
 
-type alphaReqBody struct {
-	OrderId  string            `json:"orderId"`
-	Products []alphaReqProduct `json:"products"`
-}
-
-type alphaReqProduct struct {
-	ProductId     string   `json:"productId"`
-	SizeId        string   `json:"sizeId"`
-	IngredientIds []string `json:"ingredientIds"`
-	Quantity      int      `json:"quantity"`
-}
-
-func newAlphaReqProduct(productId, sizeId string, ingredientIds []string, quantity int) alphaReqProduct {
-	return alphaReqProduct{
-		ProductId:     productId,
-		SizeId:        sizeId,
-		IngredientIds: ingredientIds,
-		Quantity:      quantity,
-	}
-}
-
-func getAlphaBody(body *internal.OrderRequest) io.ReadCloser {
-	var alphaReqProducts []alphaReqProduct
+func getAlphaBody(body *schema.OrderRequest) io.ReadCloser {
+	var alphaReqProducts []schema.AlphaReqProduct
 	fmt.Println("reached 1")
 	for _, item := range body.Items {
 		if item.Size == "" {
 			item.Size = "8001"
 		}
-		alphaReqProducts = append(alphaReqProducts, newAlphaReqProduct(item.ID, item.Size, item.Ingredients, item.Quantity))
+		alphaReqProducts = append(alphaReqProducts,
+			schema.NewAlphaReqProduct(item.ID, item.Size, item.Ingredients, item.Quantity))
 	}
 
-	alphaBody, _ := EncodeReqBody(&alphaReqBody{OrderId: body.ID, Products: alphaReqProducts})
+	alphaBody, _ := EncodeReqBody(&schema.AlphaReqBody{OrderId: body.ID, Products: alphaReqProducts})
 
 	return alphaBody
 }
 
-type betaReqBody struct {
-	Id    string        `json:"Id"`
-	Items []betaReqItem `json:"Items"`
-}
-
-type betaReqItem struct {
-	CategoryId string   `json:"CategoryId"`
-	ItemId     string   `json:"ItemId"`
-	Quantity   int      `json:"Quantity"`
-	AddOns     []string `json:"AddOns"`
-}
-
-func newBetaReqItem(categoryId, itemId string, quantity int, addOns []string) betaReqItem {
-	return betaReqItem{
-		CategoryId: categoryId,
-		ItemId:     itemId,
-		Quantity:   quantity,
-		AddOns:     addOns,
-	}
-}
-
-type betaMenu struct {
-	Categories map[string]struct {
-		Name  string `json:"Name"`
-		Items map[string]struct {
-			Name     string  `json:"Name"`
-			Price    float32 `json:"Price"`
-			Quantity int     `json:"Quantity"`
-			AddOns   []struct {
-				ID    string  `json:"Id"`
-				Name  string  `json:"Name"`
-				Price float32 `json:"Price"`
-			} `json:"AddOns"`
-		} `json:"Items"`
-	} `json:"Categories"`
-}
-
-func getBetaBody(body *internal.OrderRequest) io.ReadCloser {
+func getBetaBody(body *schema.OrderRequest) io.ReadCloser {
+	// fetch beta menu to find corresponding category IDs for item IDs
 	resp := service.RequestClient(http.MethodGet,
 		fmt.Sprintf("http://%s"+"%s", internal.BetaClientBaseURL, internal.Menu), nil)
-	fmt.Println(resp.StatusCode)
-	menu := &betaMenu{}
+
+	menu := &schema.BetaMenu{}
 	if err := DecodeReqRespBody(resp.Body, menu); err != nil {
 		panic(err.Error())
 	}
-	var betaReqItems []betaReqItem
+	var betaReqItems []schema.BetaReqItem
 	for _, item := range body.Items {
 		var categoryId string
 		for catId, cat := range menu.Categories {
@@ -177,8 +123,8 @@ func getBetaBody(body *internal.OrderRequest) io.ReadCloser {
 				}
 			}
 		}
-		betaReqItems = append(betaReqItems, newBetaReqItem(categoryId, item.ID, item.Quantity, item.Extras))
+		betaReqItems = append(betaReqItems, schema.NewBetaReqItem(categoryId, item.ID, item.Quantity, item.Extras))
 	}
-	betaBody, _ := EncodeReqBody(&betaReqBody{Id: body.ID, Items: betaReqItems})
+	betaBody, _ := EncodeReqBody(&schema.BetaReqBody{Id: body.ID, Items: betaReqItems})
 	return betaBody
 }

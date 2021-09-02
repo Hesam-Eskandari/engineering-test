@@ -1,9 +1,10 @@
 package internal
 
 const (
+	Menu = "/menu"
+
 	AlphaClientBaseURL   = ":8081"
 	BasePathAlpha        = "/alpha"
-	Menu                 = "/menu"
 	MenuCategoriesAlpha  = Menu + "/categories"
 	MenuProductsAlpha    = Menu + "/products"
 	MenuIngredientsAlpha = Menu + "/ingredients"
@@ -11,7 +12,6 @@ const (
 
 	BetaClientBaseURL = ":8082"
 	BasePathBeta      = "/beta"
-	MenuBeta          = BasePathBeta + "/menu"
-	OrdersBeta        = BasePathBeta + "/orders"
+	MenuBeta          = BasePathBeta + Menu
 	OrdersCreateBeta  = Orders + "/create"
 )
