@@ -40,5 +40,5 @@ func (h *getMenuProductsHandler) Process(r *http.Request) *http.Response {
 	ctx := r.Context()
 	method := ctx.Value(internal.MethodContextKey).(string)
 	destination := ctx.Value(internal.POSAddressContextKey).(string)
-	return service.RequestClient(method, destination, nil)
+	return service.RequestPOSClient(method, destination, nil)
 }

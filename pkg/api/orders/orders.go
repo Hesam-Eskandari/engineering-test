@@ -64,7 +64,7 @@ func (h *setOrderHandler) Process(r *http.Request) *http.Response {
 	method := ctx.Value(internal.MethodContextKey).(string)
 	destination := ctx.Value(internal.POSAddressContextKey).(string)
 	body := ctx.Value(internal.BodyContextKey).(io.ReadCloser)
-	return service.RequestClient(method, destination, body)
+	return service.RequestPOSClient(method, destination, body)
 }
 
 // DecodeReqRespBody decodes request or response arguments from request/ response body
@@ -106,7 +106,7 @@ func getAlphaBody(body *schema.OrderRequest) io.ReadCloser {
 
 func getBetaBody(body *schema.OrderRequest) io.ReadCloser {
 	// fetch beta menu to find corresponding category IDs for item IDs
-	resp := service.RequestClient(http.MethodGet,
+	resp := service.RequestPOSClient(http.MethodGet,
 		fmt.Sprintf("http://%s"+"%s", internal.BetaClientBaseURL, internal.Menu), nil)
 
 	menu := &schema.BetaMenu{}

@@ -48,5 +48,5 @@ func (h *getMenuHandler) Process(r *http.Request) *http.Response {
 	//		StatusCode: resp.StatusCode,
 	//	}
 	//}
-	return service.RequestClient(method, destination, nil)
+	return service.RequestPOSClient(method, destination, nil)
 }

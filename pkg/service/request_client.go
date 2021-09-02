@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func RequestClient(method, destination string, body io.ReadCloser) (resp *http.Response) {
+func RequestPOSClient(method, destination string, body io.ReadCloser) (resp *http.Response) {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, destination, body)
 	if err != nil {
