@@ -1,4 +1,4 @@
-package types
+package internal
 
 type OrderItem struct {
 	ID          string   `json:"id"`
