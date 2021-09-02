@@ -7,7 +7,6 @@ import (
 	"github.com/flypay/engineering-test/pkg/internal"
 	"github.com/flypay/engineering-test/pkg/service"
 	"net/http"
-	"path"
 )
 
 type getMenuCategoriesHandler struct {
@@ -29,11 +28,9 @@ func (h *getMenuCategoriesHandler) Methods() []string {
 }
 
 func (h *getMenuCategoriesHandler) ParseArgs(r *http.Request) (*http.Request, error) {
-	fmt.Println("Parsing Args")
 	ctx := context.WithValue(r.Context(), internal.MethodContextKey, http.MethodGet)
 	ctx = context.WithValue(ctx, internal.POSAddressContextKey,
 		fmt.Sprintf("http://%s"+"%s", h.clientBaseURL, internal.MenuCategoriesAlpha))
-	fmt.Println("path:", path.Base(r.URL.Path))
 	//switch path.Base(r.URL.Path) {
 	//case internal.MenuCategoriesAlpha:
 

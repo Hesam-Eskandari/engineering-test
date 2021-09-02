@@ -28,7 +28,6 @@ func (h *getMenuHandler) Methods() []string {
 }
 
 func (h *getMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
-	fmt.Println("Parsing Args")
 	ctx := context.WithValue(r.Context(), internal.MethodContextKey, http.MethodGet)
 	ctx = context.WithValue(ctx, internal.POSAddressContextKey,
 		fmt.Sprintf("http://%s"+"%s", h.clientBaseURL, internal.Menu))
