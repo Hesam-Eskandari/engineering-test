@@ -14,6 +14,21 @@ type OrderRequest struct {
 	Items []OrderItem `json:"items"`
 }
 
+type OrderResponseItem struct {
+	Name     string   `json:"name"`
+	Quantity int      `json:"quantity"`
+	Size     string   `json:"size"`
+	Extras   []string `json:"extras"`
+	Price    float32  `json:"price"`
+}
+
+type OrderResponse struct {
+	ID         string              `json:"id"`         // order id
+	POS        string              `json:"pos"`        // pos
+	Items      []OrderResponseItem `json:"items"`      // order items
+	TotalPrice float32             `json:"totalPrice"` // total price
+}
+
 type AlphaReqBody struct {
 	OrderId  string            `json:"orderId"`
 	Products []AlphaReqProduct `json:"products"`
@@ -56,18 +71,25 @@ func NewBetaReqItem(categoryId, itemId string, quantity int, addOns []string) Be
 	}
 }
 
-type BetaMenu struct {
-	Categories map[string]struct {
-		Name  string `json:"Name"`
-		Items map[string]struct {
-			Name     string  `json:"Name"`
-			Price    float32 `json:"Price"`
-			Quantity int     `json:"Quantity"`
-			AddOns   []struct {
-				ID    string  `json:"Id"`
-				Name  string  `json:"Name"`
-				Price float32 `json:"Price"`
-			} `json:"AddOns"`
-		} `json:"Items"`
-	} `json:"Categories"`
+type AlphaRespBody struct {
+	OrderId  string             `json:"orderId"`
+	Products []AlphaRespProduct `json:"products"`
+}
+
+type AlphaRespProduct struct {
+	Name        string   `json:"name"`
+	Size        string   `json:"size"`
+	Ingredients []string `json:"ingredients"`
+	Quantity    int      `json:"quantity"`
+}
+
+type BetaRespBody struct {
+	OrderId string
+	Items   []BetaRespItems
+}
+
+type BetaRespItems struct {
+	Name     string
+	AddOns   []string
+	Quantity int
 }
