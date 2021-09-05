@@ -63,9 +63,8 @@ func (h *getAlphaMenuHandler) Process(r *http.Request) *http.Response {
 		resp.Status = fmt.Sprintf("failed getting menu from alpha pos")
 		return resp
 	}
-	unifiedMenu := schema.Menu{}
-
-	service.PopulateUnifiedMenuFromAlphaMenu(alphaMenu, &unifiedMenu)
+	unifiedMenu := new(schema.Menu)
+	service.PopulateUnifiedMenuFromAlphaMenu(alphaMenu, unifiedMenu)
 	body, err := service.EncodeReqRespBody(unifiedMenu)
 	if err != nil {
 		fmt.Printf("err reached, err: %v", err.Error())
