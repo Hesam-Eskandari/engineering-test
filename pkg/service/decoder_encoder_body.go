@@ -14,6 +14,9 @@ func DecodeReqRespBody(body io.Reader, v interface{}) error {
 	if body == nil {
 		return errors.New("error decoding: body is nil")
 	}
+	if v == nil {
+		return errors.New("error decoding: interface is nil")
+	}
 	decoder := json.NewDecoder(body)
 	if err := decoder.Decode(v); err != nil {
 		return fmt.Errorf("error decoding:%s", err.Error())
