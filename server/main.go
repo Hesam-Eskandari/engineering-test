@@ -9,9 +9,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/flypay/engineering-test/pkg/api/alpha"
 	"github.com/flypay/engineering-test/pkg/api/apiHandler"
-	"github.com/flypay/engineering-test/pkg/api/beta"
+	"github.com/flypay/engineering-test/pkg/api/menus"
 	"github.com/flypay/engineering-test/pkg/api/orders"
 
 	"github.com/gorilla/mux"
@@ -19,8 +18,8 @@ import (
 
 func main() {
 	apiHandlers := make([]apiHandler.Handler, 0, 5)
-	apiHandlers = append(apiHandlers, alpha.NewGetMenu())
-	apiHandlers = append(apiHandlers, beta.NewGetMenu())
+	apiHandlers = append(apiHandlers, menus.NewGetAlphaMenu())
+	apiHandlers = append(apiHandlers, menus.NewGetBetaMenu())
 	apiHandlers = append(apiHandlers, orders.NewSetOrder())
 	router := mux.NewRouter().StrictSlash(true)
 	for _, handler := range apiHandlers {
