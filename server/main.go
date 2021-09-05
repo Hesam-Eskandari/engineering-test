@@ -19,9 +19,7 @@ import (
 
 func main() {
 	apiHandlers := make([]apiHandler.Handler, 0, 5)
-	apiHandlers = append(apiHandlers, alpha.NewGetMenuCategories())
-	apiHandlers = append(apiHandlers, alpha.NewGetMenuIngredients())
-	apiHandlers = append(apiHandlers, alpha.NewGetMenuProductsHandler())
+	apiHandlers = append(apiHandlers, alpha.NewGetMenu())
 	apiHandlers = append(apiHandlers, beta.NewGetMenu())
 	apiHandlers = append(apiHandlers, orders.NewSetOrder())
 	router := mux.NewRouter().StrictSlash(true)
@@ -100,7 +98,7 @@ func createHTTPHandler(handler apiHandler.Handler) http.Handler {
 		}
 		w.WriteHeader(resp.StatusCode)
 		if resp.StatusCode == http.StatusOK {
-			defer r.Body.Close()
+			defer resp.Body.Close()
 			body, _ := ioutil.ReadAll(resp.Body)
 			// fmt.Println("body", body)
 			if _, err := w.Write(body); err != nil {
