@@ -23,10 +23,10 @@ type OrderResponseItem struct {
 }
 
 type OrderResponse struct {
-	ID         string              `json:"id"`         // order id
-	POS        string              `json:"pos"`        // pos
-	Items      []OrderResponseItem `json:"items"`      // order items
-	TotalPrice float32             `json:"totalPrice"` // total price
+	ID         string              `json:"id"`          // order id
+	POS        string              `json:"pos"`         // pos
+	Items      []OrderResponseItem `json:"items"`       // order items
+	TotalPrice float32             `json:"total_price"` // total price
 }
 
 type AlphaReqBody struct {
