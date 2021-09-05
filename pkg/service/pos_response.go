@@ -42,17 +42,17 @@ func BuildRespFromBetaOrder(resp *http.Response, reqBody *schema.OrderRequest,
 func GetAlphaMenu(method string, destination *schema.AlphaMenuAddress, alphaMenu *schema.AlphaMenu) error {
 
 	categoriesResp := RequestPOSClient(method, destination.AlphaCategoriesAddress, nil)
-	if err := DecodeReqRespBody(categoriesResp.Body, alphaMenu.AlphaCategoriesMenu); err != nil {
+	if err := DecodeReqRespBody(categoriesResp.Body, &alphaMenu.AlphaCategoriesMenu); err != nil {
 		log.Printf("[categoriesResp] failed decoding:, incompatible response body: %v", err)
 		return err
 	}
 	productsResp := RequestPOSClient(method, destination.AlphaProductsAddress, nil)
-	if err := DecodeReqRespBody(productsResp.Body, alphaMenu.AlphaProductsMenu); err != nil {
+	if err := DecodeReqRespBody(productsResp.Body, &alphaMenu.AlphaProductsMenu); err != nil {
 		log.Printf("[ingredientsResp] failed decoding:, incompatible response body: %v", err)
 		return err
 	}
 	ingredientsResp := RequestPOSClient(method, destination.AlphaIngredientsAddress, nil)
-	if err := DecodeReqRespBody(ingredientsResp.Body, alphaMenu.AlphaIngredientsMenu); err != nil {
+	if err := DecodeReqRespBody(ingredientsResp.Body, &alphaMenu.AlphaIngredientsMenu); err != nil {
 		log.Printf("[ingredientsResp] failed decoding:, incompatible response body: %v", err)
 		return err
 	}

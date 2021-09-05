@@ -84,12 +84,6 @@ type AlphaProductsMenu struct {
 	Products []AlphaProductMenuItem `json:"products"`
 }
 
-func NewEmptyAlphaProductsMenu() *AlphaProductsMenu {
-	return &AlphaProductsMenu{
-		Products: make([]AlphaProductMenuItem, 0),
-	}
-}
-
 // AlphaProductMenuItem represents product item structure in products menu of alpha pos
 type AlphaProductMenuItem struct {
 	ProductID          string                      `json:"productId"`
@@ -119,12 +113,6 @@ type AlphaIngredientsMenu struct {
 	Ingredients []AlphaIngredientsMenuItem `json:"ingredients"`
 }
 
-func NewEmptyAlphaIngredientsMenu() *AlphaIngredientsMenu {
-	return &AlphaIngredientsMenu{
-		Ingredients: make([]AlphaIngredientsMenuItem, 0),
-	}
-}
-
 // AlphaIngredientsMenuItem represents ingredient item structure in ingredients menu of alpha pos
 type AlphaIngredientsMenuItem struct {
 	IngredientID     string `json:"ingredientId"`
@@ -132,30 +120,16 @@ type AlphaIngredientsMenuItem struct {
 	GroupDescription string `json:"groupDescription"`
 }
 
-func NewEmptyAlphaMenu() *AlphaMenu {
-	return &AlphaMenu{
-		AlphaCategoriesMenu:  NewEmptyAlphaCategoriesMenu(),
-		AlphaIngredientsMenu: NewEmptyAlphaIngredientsMenu(),
-		AlphaProductsMenu:    NewEmptyAlphaProductsMenu(),
-	}
-}
-
 type AlphaMenu struct {
-	*AlphaCategoriesMenu
-	*AlphaIngredientsMenu
-	*AlphaProductsMenu
+	AlphaCategoriesMenu
+	AlphaIngredientsMenu
+	AlphaProductsMenu
 }
 
 type AlphaMenuAddress struct {
 	AlphaCategoriesAddress  string
 	AlphaIngredientsAddress string
 	AlphaProductsAddress    string
-}
-
-func NewEmptyAlphaCategoriesMenu() *AlphaCategoriesMenu {
-	return &AlphaCategoriesMenu{
-		Categories: make([]AlphaCategoriesMenuItem, 0),
-	}
 }
 
 // AlphaCategoriesMenu represents category menu structure of alpha pos

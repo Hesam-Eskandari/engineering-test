@@ -51,7 +51,7 @@ func (h *getAlphaMenuHandler) Process(r *http.Request) *http.Response {
 	method := ctx.Value(internal.MethodContextKey).(string)
 	alphaAddress := ctx.Value(internal.POSAddressContextKey).(*schema.AlphaMenuAddress)
 
-	alphaMenu := schema.NewEmptyAlphaMenu()
+	alphaMenu := new(schema.AlphaMenu)
 	if err := service.GetAlphaMenu(method, alphaAddress, alphaMenu); err != nil {
 		log.Printf("error getting menu from alpha pos. err: %s", err.Error())
 		resp.StatusCode = http.StatusInternalServerError
