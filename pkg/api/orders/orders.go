@@ -47,7 +47,9 @@ func (h *setOrderHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	case "beta":
 		ctx = context.WithValue(ctx, internal.POSAddressContextKey,
 			fmt.Sprintf("http://%s"+"%s", h.betaClientBaseURL, internal.OrdersCreateBeta))
-		ctx = context.WithValue(ctx, internal.BodyContextKey, getBetaReqBody(requestBody))
+		body, menu := getBetaReqBody(requestBody)
+		ctx = context.WithValue(ctx, internal.BodyContextKey, body)
+		ctx = context.WithValue(ctx, internal.MenuContextKey, menu)
 	default:
 		return r, fmt.Errorf("[orders] pos %s is not valid", requestBody.POS)
 	}
@@ -62,12 +64,15 @@ func (h *setOrderHandler) Process(r *http.Request) *http.Response {
 	body := ctx.Value(internal.BodyContextKey).(io.ReadCloser)
 	reqBody := ctx.Value(internal.RequestContextKey).(*schema.OrderRequest)
 	resp := service.RequestPOSClient(method, destination, body)
-	// fmt.Println(pos, internal.POSAlpha, internal.POSBeta)
-	switch reqBody.POS {
-	case internal.POSAlpha:
-		resp = service.BuildRespFromAlpha(resp, reqBody)
-	case internal.POSBeta:
-		resp = service.BuildRespFromBeta(resp, reqBody)
+
+	if resp.StatusCode == http.StatusOK {
+		switch reqBody.POS {
+		case internal.POSAlpha:
+			resp = service.BuildRespFromAlphaOrder(resp, reqBody)
+		case internal.POSBeta:
+			menu := ctx.Value(internal.MenuContextKey).(*schema.BetaMenu)
+			resp = service.BuildRespFromBetaOrder(resp, reqBody, menu)
+		}
 	}
 	return resp
 }
@@ -87,13 +92,13 @@ func getAlphaReqBody(body *schema.OrderRequest) io.ReadCloser {
 	return alphaBody
 }
 
-func getBetaReqBody(body *schema.OrderRequest) io.ReadCloser {
+func getBetaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.BetaMenu) {
 	// fetch beta menu to find corresponding category IDs for item IDs
 	resp := service.RequestPOSClient(http.MethodGet,
 		fmt.Sprintf("http://%s"+"%s", internal.BetaClientBaseURL, internal.Menu), nil)
 
-	menu := &schema.BetaMenu{}
-	if err := service.DecodeReqRespBody(resp.Body, menu); err != nil {
+	menu := schema.BetaMenu{}
+	if err := service.DecodeReqRespBody(resp.Body, &menu); err != nil {
 		panic(err.Error())
 	}
 	var betaReqItems []schema.BetaReqItem
@@ -106,8 +111,9 @@ func getBetaReqBody(body *schema.OrderRequest) io.ReadCloser {
 				}
 			}
 		}
-		betaReqItems = append(betaReqItems, schema.NewBetaReqItem(categoryId, item.ID, item.Quantity, item.Extras))
+		betaReqItems = append(betaReqItems, schema.NewBetaReqItem(categoryId, item.ID,
+			item.Quantity, append(item.Extras, item.Ingredients...)))
 	}
 	betaBody, _ := service.EncodeReqRespBody(&schema.BetaReqBody{Id: body.ID, Items: betaReqItems})
-	return betaBody
+	return betaBody, &menu
 }
