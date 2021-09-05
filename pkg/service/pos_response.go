@@ -58,3 +58,12 @@ func GetAlphaMenu(method string, destination *schema.AlphaMenuAddress, alphaMenu
 	}
 	return nil
 }
+
+func GetBetaMenu(method, address string, betaMenu *schema.BetaMenu) error {
+	betaMenuResp := RequestPOSClient(method, address, nil)
+	if err := DecodeReqRespBody(betaMenuResp.Body, betaMenu); err != nil {
+		log.Printf("[categoriesResp] failed decoding:, incompatible response body: %v", err)
+		return err
+	}
+	return nil
+}
