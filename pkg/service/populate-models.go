@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/flypay/engineering-test/pkg/internal"
 	"github.com/flypay/engineering-test/pkg/internal/schema"
@@ -183,6 +184,8 @@ func populateUnifiedRespBodyForAlpha(reqBody *schema.OrderRequest, unifiedBody *
 }
 
 func PopulateUnifiedMenuFromAlphaMenu(alphaMenu *schema.AlphaMenu, unifiedMenu *schema.Menu) {
+	unifiedMenu.POS = internal.POSAlpha
+
 	ingredientMap := make(map[string]*schema.MenuItemIngredient)
 	for _, ingredient := range alphaMenu.AlphaIngredientsMenu.Ingredients {
 		ingredientMap[ingredient.IngredientID] = &schema.MenuItemIngredient{
@@ -198,9 +201,9 @@ func PopulateUnifiedMenuFromAlphaMenu(alphaMenu *schema.AlphaMenu, unifiedMenu *
 	}
 	itemMap := make(map[string]*schema.MenuItem)
 	for _, product := range alphaMenu.AlphaProductsMenu.Products {
-		sizes := make([]*schema.MenuItemDetail, 0)
+		sizes := make([]*schema.MenuItemSize, 0)
 		for _, productSize := range product.Sizes {
-			size := &schema.MenuItemDetail{
+			size := &schema.MenuItemSize{
 				Name:  productSize.Name,
 				ID:    productSize.SizeID,
 				Price: productSize.Price,
@@ -215,9 +218,9 @@ func PopulateUnifiedMenuFromAlphaMenu(alphaMenu *schema.AlphaMenu, unifiedMenu *
 			}
 			ingredients = append(ingredients, ingredient)
 		}
-		extras := make([]*schema.MenuItemDetail, 0)
+		extras := make([]*schema.MenuItemExtra, 0)
 		for _, productExtra := range product.Extras {
-			extra := &schema.MenuItemDetail{
+			extra := &schema.MenuItemExtra{
 				Name:  ingredientMap[productExtra.IngredientID].Name,
 				ID:    productExtra.IngredientID,
 				Price: productExtra.Price,
@@ -235,7 +238,6 @@ func PopulateUnifiedMenuFromAlphaMenu(alphaMenu *schema.AlphaMenu, unifiedMenu *
 		}
 	}
 
-	unifiedMenu.POS = internal.POSAlpha
 	for _, cat := range alphaMenu.Categories {
 		subcategories := make([]*schema.MenuSubcategory, 0)
 		for _, subCat := range cat.Subcategories {
@@ -256,4 +258,44 @@ func PopulateUnifiedMenuFromAlphaMenu(alphaMenu *schema.AlphaMenu, unifiedMenu *
 			Subcategories: subcategories,
 		})
 	}
+}
+
+func PopulateUnifiedMenuFromBetaMenu(betaMenu *schema.BetaMenu, unifiedMenu *schema.Menu) {
+	unifiedMenu.POS = internal.POSBeta
+	categories := make([]*schema.MenuCategory, 0, len(betaMenu.Categories))
+	for catID, betaCategory := range betaMenu.Categories {
+		category := new(schema.MenuCategory)
+		category.ID = catID
+		category.Name = betaCategory.Name
+
+		subcategory := new(schema.MenuSubcategory)
+		subcategory.ID = catID
+		subcategory.Name = betaCategory.Name
+
+		items := make([]*schema.MenuItem, 0, len(betaCategory.Items))
+		for itemID, betaItem := range betaMenu.Categories[catID].Items {
+			item := new(schema.MenuItem)
+			item.ID = itemID
+			item.Name = betaItem.Name
+
+			sizes := make([]*schema.MenuItemSize, 0, 1)
+			item.Sizes = append(sizes, &schema.MenuItemSize{Name: "Regular", ID: itemID, Price: betaItem.Price})
+
+			extras := make([]*schema.MenuItemExtra, 0, len(betaItem.AddOns))
+			for addOnID, addOn := range betaItem.AddOns {
+				extra := new(schema.MenuItemExtra)
+				extra.ID = strconv.Itoa(addOnID)
+				extra.Name = addOn.Name
+				extra.Price = addOn.Price
+				extras = append(extras, extra)
+			}
+			item.Extras = extras
+			item.Ingredients = make([]*schema.MenuItemIngredient, 0)
+			items = append(items, item)
+		}
+		subcategory.Items = items
+		category.Subcategories = append(category.Subcategories, subcategory)
+		categories = append(categories, category)
+	}
+	unifiedMenu.Categories = categories
 }
