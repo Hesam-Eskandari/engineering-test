@@ -5,7 +5,7 @@ type OrderItem struct {
 	Quantity    int      `json:"quantity"`
 	Size        string   `json:"size_id"`
 	Ingredients []string `json:"ingredient_ids"`
-	Extras      []string `json:"extra_ids"`
+	Extras      []string `json:"extras"`
 }
 
 type OrderRequest struct {
