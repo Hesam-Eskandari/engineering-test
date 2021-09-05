@@ -3,10 +3,12 @@ package internal
 type ContextKey string
 
 const (
+	BodyContextKey       ContextKey = "body"
+	MenuContextKey       ContextKey = "menu"
 	MethodContextKey     ContextKey = "method"
 	POSAddressContextKey ContextKey = "destination"
-	BodyContextKey       ContextKey = "body"
 	RequestContextKey    ContextKey = "pos"
-	POSAlpha             string     = "alpha"
-	POSBeta              string     = "beta"
+
+	POSAlpha string = "alpha"
+	POSBeta  string = "beta"
 )
