@@ -21,7 +21,7 @@ func main() {
 	apiHandlers = append(apiHandlers, menus.NewGetAlphaMenu())
 	apiHandlers = append(apiHandlers, menus.NewGetBetaMenu())
 	apiHandlers = append(apiHandlers, orders.NewSetOrder())
-	router := mux.NewRouter().StrictSlash(true)
+	router := mux.NewRouter().StrictSlash(false)
 	for _, handler := range apiHandlers {
 		RegisterMux(router, handler)
 		RegisterHTTP(handler)
