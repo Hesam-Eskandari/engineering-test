@@ -1,4 +1,4 @@
-package beta
+package menus
 
 import (
 	"context"
@@ -10,25 +10,25 @@ import (
 	"github.com/flypay/engineering-test/pkg/service"
 )
 
-type getMenuHandler struct {
+type getBetaMenuHandler struct {
 	clientBaseURL string
 }
 
-func NewGetMenu() apiHandler.Handler {
-	return &getMenuHandler{
+func NewGetBetaMenu() apiHandler.Handler {
+	return &getBetaMenuHandler{
 		clientBaseURL: internal.BetaClientBaseURL,
 	}
 }
 
-func (h *getMenuHandler) URL() string {
+func (h *getBetaMenuHandler) URL() string {
 	return internal.MenuBeta
 }
 
-func (h *getMenuHandler) Methods() []string {
+func (h *getBetaMenuHandler) Methods() []string {
 	return []string{http.MethodGet}
 }
 
-func (h *getMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
+func (h *getBetaMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	ctx := context.WithValue(r.Context(), internal.MethodContextKey, http.MethodGet)
 	ctx = context.WithValue(ctx, internal.POSAddressContextKey,
 		fmt.Sprintf("http://%s"+"%s", h.clientBaseURL, internal.Menu))
@@ -36,7 +36,7 @@ func (h *getMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	return r, nil
 }
 
-func (h *getMenuHandler) Process(r *http.Request) *http.Response {
+func (h *getBetaMenuHandler) Process(r *http.Request) *http.Response {
 	ctx := r.Context()
 	method := ctx.Value(internal.MethodContextKey).(string)
 	destination := ctx.Value(internal.POSAddressContextKey).(string)

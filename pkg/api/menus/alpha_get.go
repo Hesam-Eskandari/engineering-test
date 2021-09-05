@@ -1,37 +1,37 @@
-package alpha
+package menus
 
 import (
 	"context"
 	"fmt"
-	"github.com/flypay/engineering-test/pkg/internal/schema"
 	"log"
 	"net/http"
 
 	"github.com/flypay/engineering-test/pkg/api/apiHandler"
 	"github.com/flypay/engineering-test/pkg/internal"
+	"github.com/flypay/engineering-test/pkg/internal/schema"
 	"github.com/flypay/engineering-test/pkg/service"
 )
 
-type getMenuHandler struct {
+type getAlphaMenuHandler struct {
 	clientBaseURL string
 }
 
-func NewGetMenuCategories() apiHandler.Handler {
-	return &getMenuHandler{
+func NewGetAlphaMenu() apiHandler.Handler {
+	return &getAlphaMenuHandler{
 		clientBaseURL: internal.AlphaClientBaseURL,
 	}
 }
 
-func (h *getMenuHandler) URL() string {
+func (h *getAlphaMenuHandler) URL() string {
 	return internal.BasePathAlpha + internal.Menu
 }
 
-func (h *getMenuHandler) Methods() []string {
+func (h *getAlphaMenuHandler) Methods() []string {
 	return []string{http.MethodGet}
 }
 
 // ParseArgs parses arguments in the request body and generates context keys
-func (h *getMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
+func (h *getAlphaMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	// no argument in the body of the request we accept
 	// lets just create context keys
 	ctx := context.WithValue(r.Context(), internal.MethodContextKey, http.MethodGet)
@@ -45,7 +45,7 @@ func (h *getMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	return r, nil
 }
 
-func (h *getMenuHandler) Process(r *http.Request) *http.Response {
+func (h *getAlphaMenuHandler) Process(r *http.Request) *http.Response {
 	resp := new(http.Response)
 	ctx := r.Context()
 	method := ctx.Value(internal.MethodContextKey).(string)
