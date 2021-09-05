@@ -12,25 +12,29 @@ import (
 	"github.com/flypay/engineering-test/pkg/service"
 )
 
+// getAlphaMenuHandler handles the request of getting alpha's menu
 type getAlphaMenuHandler struct {
 	clientBaseURL string
 }
 
+// NewGetAlphaMenu returns an instance of getAlphaMenuHandler
 func NewGetAlphaMenu() apiHandler.Handler {
 	return &getAlphaMenuHandler{
 		clientBaseURL: internal.AlphaClientBaseURL,
 	}
 }
 
+// URL returns the request URL to this handler
 func (h *getAlphaMenuHandler) URL() string {
 	return internal.BasePathAlpha + internal.Menu
 }
 
+// Methods returns the bounding HTTP methods
 func (h *getAlphaMenuHandler) Methods() []string {
 	return []string{http.MethodGet}
 }
 
-// ParseArgs parses arguments in the request body and generates context keys
+// ParseArgs parses request arguments in and generates context keys
 func (h *getAlphaMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	// no argument in the body of the request we accept
 	// lets just create context keys
@@ -45,6 +49,7 @@ func (h *getAlphaMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) 
 	return r, nil
 }
 
+// Process processes the request
 func (h *getAlphaMenuHandler) Process(r *http.Request) *http.Response {
 	resp := new(http.Response)
 	ctx := r.Context()
