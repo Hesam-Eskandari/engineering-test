@@ -61,6 +61,7 @@ func (h *getBetaMenuHandler) Process(r *http.Request) *http.Response {
 	}
 	unifiedMenu := new(schema.Menu)
 	service.PopulateUnifiedMenuFromBetaMenu(betaMenu, unifiedMenu)
+	service.SortUnifiedMenu(unifiedMenu)
 	body, err := service.EncodeReqRespBody(unifiedMenu)
 	if err != nil {
 		fmt.Printf("err reached, err: %v", err.Error())
