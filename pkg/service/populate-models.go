@@ -7,6 +7,7 @@ import (
 	"github.com/flypay/engineering-test/pkg/internal/schema"
 )
 
+// PopulateUnifiedOrderRespBody populates the unified order response body with given order
 func PopulateUnifiedOrderRespBody(reqBody *schema.OrderRequest, menu *schema.Menu, unifiedBody *schema.OrderResponse) {
 	unifiedBody.ID = reqBody.ID
 	unifiedBody.POS = reqBody.POS
@@ -69,6 +70,7 @@ func PopulateUnifiedOrderRespBody(reqBody *schema.OrderRequest, menu *schema.Men
 	unifiedBody.Items = items
 }
 
+// PopulateUnifiedMenuFromAlphaMenu populates the unified menu struct with alpha menus
 func PopulateUnifiedMenuFromAlphaMenu(alphaMenu *schema.AlphaMenu, unifiedMenu *schema.Menu) {
 	unifiedMenu.POS = internal.POSAlpha
 
@@ -146,6 +148,7 @@ func PopulateUnifiedMenuFromAlphaMenu(alphaMenu *schema.AlphaMenu, unifiedMenu *
 	}
 }
 
+// PopulateUnifiedMenuFromBetaMenu populates the unified menu struct with beta menu
 func PopulateUnifiedMenuFromBetaMenu(betaMenu *schema.BetaMenu, unifiedMenu *schema.Menu) {
 	unifiedMenu.POS = internal.POSBeta
 	categories := make([]*schema.MenuCategory, 0, len(betaMenu.Categories))
