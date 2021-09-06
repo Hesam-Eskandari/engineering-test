@@ -14,17 +14,17 @@ import (
 )
 
 func main() {
-	apiHandlers := make([]apiHandler.Handler, 0, 5)
+	apiHandlers := make([]apiHandler.Handler, 0, 3)
 	apiHandlers = append(apiHandlers, menus.NewGetAlphaMenu())
 	apiHandlers = append(apiHandlers, menus.NewGetBetaMenu())
 	apiHandlers = append(apiHandlers, orders.NewSetOrder())
-	//router := mux.NewRouter().StrictSlash(false)  // uncomment to use mux server
+	//router := mux.NewRouter().StrictSlash(false) // uncomment to use the mux server
 	for _, handler := range apiHandlers {
-		//RegisterMux(router, handler)
+		//RegisterMux(router, handler) // uncomment to use the mux server
 		RegisterHTTP(handler)
 	}
 
-	// go launchMuxServer(router) // uncomment to use mux server
+	// go launchMuxServer(router) // uncomment to use the mux server
 	launchHTTPServer()
 
 }
@@ -93,35 +93,38 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.serveHTTP(w, r)
 }
 
-//func launchMuxServer(router *mux.Router) {
-//	port := 8085
-//	server := &http.Server{
-//		Addr:    fmt.Sprintf(":%v", port),
-//		Handler: HTTPMiddleware(router),
-//	}
-//	conn, err := net.Listen("tcp", server.Addr)
-//	if err != nil {
-//		fmt.Printf("error listing to %v port, err: %s", port, err.Error())
-//	}
-//	fmt.Println("mux server ready")
-//	if err = server.Serve(conn); err != nil {
-//		fmt.Printf("server encountered err: %s", err)
-//	}
-//}
+// uncomment the three functions bellow to use the mux server
+/*
+func launchMuxServer(router *mux.Router) {
+	port := 8085
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%v", port),
+		Handler: HTTPMiddleware(router),
+	}
+	conn, err := net.Listen("tcp", server.Addr)
+	if err != nil {
+		fmt.Printf("error listing to %v port, err: %s", port, err.Error())
+	}
+	fmt.Println("mux server ready")
+	if err = server.Serve(conn); err != nil {
+		fmt.Printf("server encountered err: %s", err)
+	}
+}
 
-//func RegisterMux(router *mux.Router, handler apiHandler.Handler) *mux.Route {
-//	h := createHTTPHandler(handler)
-//	route := router.HandleFunc(handler.URL(), h.ServeHTTP)
-//	methods := handler.Methods()
-//	if len(methods) > 0 {
-//		route.Methods(methods...)
-//	}
-//	return route
-//}
+func RegisterMux(router *mux.Router, handler apiHandler.Handler) *mux.Route {
+	h := createHTTPHandler(handler)
+	route := router.HandleFunc(handler.URL(), h.ServeHTTP)
+	methods := handler.Methods()
+	if len(methods) > 0 {
+		route.Methods(methods...)
+	}
+	return route
+}
 
-// HTTPMiddleware can provide logging/tracing for incoming http requests.
-//func HTTPMiddleware(h http.Handler) http.Handler {
-//	return http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
-//		h.ServeHTTP(w, request)
-//	})
-//}
+HTTPMiddleware can provide logging/tracing for incoming http requests.
+func HTTPMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		h.ServeHTTP(w, request)
+	})
+}
+*/
