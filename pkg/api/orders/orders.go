@@ -2,8 +2,10 @@ package orders
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/flypay/engineering-test/pkg/api/apiHandler"
@@ -33,9 +35,12 @@ func (h *setOrderHandler) Methods() []string {
 }
 
 func (h *setOrderHandler) ParseArgs(r *http.Request) (*http.Request, error) {
-	requestBody := &schema.OrderRequest{}
+	requestBody := new(schema.OrderRequest)
 	if err := service.DecodeReqRespBody(r.Body, requestBody); err != nil {
 		return r, fmt.Errorf("[orders] error decoding request body, error: %s", err.Error())
+	}
+	if err := validateOrder(requestBody); err != nil {
+		return r, fmt.Errorf("[orders] failed validating order. err: %s", err.Error())
 	}
 	ctx := context.WithValue(r.Context(), internal.MethodContextKey, http.MethodPost)
 	ctx = context.WithValue(ctx, internal.RequestContextKey, requestBody)
@@ -47,7 +52,10 @@ func (h *setOrderHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	case "beta":
 		ctx = context.WithValue(ctx, internal.POSAddressContextKey,
 			fmt.Sprintf("http://%s"+"%s", h.betaClientBaseURL, internal.OrdersCreateBeta))
-		body, menu := getBetaReqBody(requestBody)
+		body, menu, err := getBetaReqBody(requestBody)
+		if err != nil {
+			return r, fmt.Errorf("[orders] pos %s is not available. err: %s", requestBody.POS, err.Error())
+		}
 		ctx = context.WithValue(ctx, internal.BodyContextKey, body)
 		ctx = context.WithValue(ctx, internal.MenuContextKey, menu)
 	default:
@@ -59,19 +67,34 @@ func (h *setOrderHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 
 func (h *setOrderHandler) Process(r *http.Request) *http.Response {
 	ctx := r.Context()
+	var err error
 	method := ctx.Value(internal.MethodContextKey).(string)
 	destination := ctx.Value(internal.POSAddressContextKey).(string)
 	body := ctx.Value(internal.BodyContextKey).(io.ReadCloser)
 	reqBody := ctx.Value(internal.RequestContextKey).(*schema.OrderRequest)
 	resp := service.RequestPOSClient(method, destination, body)
-
+	log.Printf("server %v responded with status: %v, order id: %v", reqBody.POS, resp.Status, reqBody.ID)
 	if resp.StatusCode == http.StatusOK {
+		unifiedBody := new(schema.OrderResponse) // desired response body to return
 		switch reqBody.POS {
 		case internal.POSAlpha:
-			resp = service.BuildRespFromAlphaOrder(resp, reqBody)
+
+			if err = service.BuildRespFromAlphaOrder(reqBody, unifiedBody); err != nil {
+				resp.StatusCode = http.StatusInternalServerError
+			}
 		case internal.POSBeta:
 			menu := ctx.Value(internal.MenuContextKey).(*schema.BetaMenu)
-			resp = service.BuildRespFromBetaOrder(resp, reqBody, menu)
+			if err = service.BuildRespFromBetaOrder(reqBody, menu, unifiedBody); err != nil {
+				resp.StatusCode = http.StatusInternalServerError
+			}
+
+		}
+		log.Printf("Order submitted. orderID: %s, pos: %s, "+
+			"total price: $%.2f", reqBody.ID, reqBody.POS, unifiedBody.TotalPrice)
+		resp.Body, err = service.EncodeReqRespBody(unifiedBody)
+		if err != nil {
+			log.Printf("failed encoding: error: %s", err.Error())
+			resp.StatusCode = http.StatusInternalServerError
 		}
 	}
 	return resp
@@ -80,9 +103,6 @@ func (h *setOrderHandler) Process(r *http.Request) *http.Response {
 func getAlphaReqBody(body *schema.OrderRequest) io.ReadCloser {
 	var alphaReqProducts []schema.AlphaReqProduct
 	for _, item := range body.Items {
-		if item.Size == "" {
-			item.Size = "8001"
-		}
 		alphaReqProducts = append(alphaReqProducts,
 			schema.NewAlphaReqProduct(item.ID, item.Size, item.Ingredients, item.Quantity))
 	}
@@ -92,14 +112,14 @@ func getAlphaReqBody(body *schema.OrderRequest) io.ReadCloser {
 	return alphaBody
 }
 
-func getBetaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.BetaMenu) {
+func getBetaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.BetaMenu, error) {
 	// fetch beta menu to find corresponding category IDs for item IDs
-	resp := service.RequestPOSClient(http.MethodGet,
-		fmt.Sprintf("http://%s"+"%s", internal.BetaClientBaseURL, internal.Menu), nil)
-
-	menu := schema.BetaMenu{}
-	if err := service.DecodeReqRespBody(resp.Body, &menu); err != nil {
-		panic(err.Error())
+	menu := new(schema.BetaMenu)
+	err := service.GetBetaMenu(http.MethodGet,
+		fmt.Sprintf("http://%s"+"%s", internal.BetaClientBaseURL, internal.Menu), menu)
+	if err != nil {
+		log.Printf("failed getting beta menu, err: %s", err.Error())
+		return nil, menu, err
 	}
 	var betaReqItems []schema.BetaReqItem
 	for _, item := range body.Items {
@@ -115,5 +135,23 @@ func getBetaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.BetaMenu)
 			item.Quantity, append(item.Extras, item.Ingredients...)))
 	}
 	betaBody, _ := service.EncodeReqRespBody(&schema.BetaReqBody{Id: body.ID, Items: betaReqItems})
-	return betaBody, &menu
+	return betaBody, menu, nil
+}
+
+func validateOrder(order *schema.OrderRequest) error {
+	if !internal.ValidatePoses(order.POS) {
+		return errors.New(fmt.Sprintf("POS %s is not valid", order.POS))
+	}
+	if order.ID == "" {
+		return errors.New("order id cannot be empty")
+	}
+	if order.Items == nil || len(order.Items) == 0 {
+		return errors.New("must choose at least one item")
+	}
+	for index, item := range order.Items {
+		if item.Quantity == 0 {
+			order.Items[index].Quantity = 1
+		}
+	}
+	return nil
 }
