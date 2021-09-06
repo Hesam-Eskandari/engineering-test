@@ -39,12 +39,7 @@ func (h *getAlphaMenuHandler) ParseArgs(r *http.Request) (*http.Request, error) 
 	// no argument in the body of the request we accept
 	// lets just create context keys
 	ctx := context.WithValue(r.Context(), internal.MethodContextKey, http.MethodGet)
-	ctx = context.WithValue(ctx, internal.POSAddressContextKey,
-		&schema.AlphaMenuAddress{
-			AlphaCategoriesAddress:  fmt.Sprintf("http://%s"+"%s", h.clientBaseURL, internal.MenuCategoriesAlpha),
-			AlphaIngredientsAddress: fmt.Sprintf("http://%s"+"%s", h.clientBaseURL, internal.MenuIngredientsAlpha),
-			AlphaProductsAddress:    fmt.Sprintf("http://%s"+"%s", h.clientBaseURL, internal.MenuProductsAlpha),
-		})
+	ctx = context.WithValue(ctx, internal.POSAddressContextKey, schema.NewAlphaMenuAddress())
 	r = r.WithContext(ctx)
 	return r, nil
 }
