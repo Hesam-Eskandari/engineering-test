@@ -1,5 +1,11 @@
 package schema
 
+import (
+	"fmt"
+
+	"github.com/flypay/engineering-test/pkg/internal"
+)
+
 // Menu represents unified menu structure to return to clients
 type Menu struct {
 	POS        string          `json:"pos"`
@@ -53,19 +59,7 @@ type MenuItemIngredient struct {
 
 // BetaMenu represents menu structure of beta pos
 type BetaMenu struct {
-	Categories map[string]struct {
-		Name  string `json:"Name"`
-		Items map[string]struct {
-			Name     string  `json:"Name"`
-			Price    float32 `json:"Price"`
-			Quantity int     `json:"Quantity"`
-			AddOns   []struct {
-				ID    string  `json:"Id"`
-				Name  string  `json:"Name"`
-				Price float32 `json:"Price"`
-			} `json:"AddOns"`
-		} `json:"Items"`
-	} `json:"Categories"`
+	Categories map[string]*BetaMenuCategory `json:"Categories"`
 }
 
 // BetaMenuCategory represents category structure for beta menu
@@ -162,4 +156,12 @@ type AlphaMenuAddress struct {
 	AlphaCategoriesAddress  string
 	AlphaIngredientsAddress string
 	AlphaProductsAddress    string
+}
+
+func NewAlphaMenuAddress() *AlphaMenuAddress {
+	return &AlphaMenuAddress{
+		AlphaCategoriesAddress:  fmt.Sprintf("http://%s"+"%s", internal.AlphaClientBaseURL, internal.MenuCategoriesAlpha),
+		AlphaIngredientsAddress: fmt.Sprintf("http://%s"+"%s", internal.AlphaClientBaseURL, internal.MenuIngredientsAlpha),
+		AlphaProductsAddress:    fmt.Sprintf("http://%s"+"%s", internal.AlphaClientBaseURL, internal.MenuProductsAlpha),
+	}
 }
