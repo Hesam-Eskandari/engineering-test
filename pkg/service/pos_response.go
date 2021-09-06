@@ -1,20 +1,13 @@
 package service
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/flypay/engineering-test/pkg/internal/schema"
+	"log"
 )
 
-func BuildRespFromAlphaOrder(reqBody *schema.OrderRequest, unifiedBody *schema.OrderResponse) error {
+func BuildRespFromAlphaOrder(reqBody *schema.OrderRequest, unifiedBody *schema.OrderResponse, alphaMenu *schema.AlphaMenu) error {
 	unifiedMenu := new(schema.Menu)
-	var err error
-	alphaMenu := new(schema.AlphaMenu)
-	if err = GetAlphaMenu(http.MethodGet, schema.NewAlphaMenuAddress(), alphaMenu); err != nil {
-		log.Printf("failed encoding: error: %s", err.Error())
-		return err
-	}
+
 	PopulateUnifiedMenuFromAlphaMenu(alphaMenu, unifiedMenu)
 	PopulateUnifiedOrderRespBody(reqBody, unifiedMenu, unifiedBody)
 	return nil

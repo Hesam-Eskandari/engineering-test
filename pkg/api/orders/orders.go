@@ -48,7 +48,12 @@ func (h *setOrderHandler) ParseArgs(r *http.Request) (*http.Request, error) {
 	case "alpha":
 		ctx = context.WithValue(ctx, internal.POSAddressContextKey,
 			fmt.Sprintf("http://%s"+"%s", h.alphaClientBaseURL, internal.Orders))
-		ctx = context.WithValue(ctx, internal.BodyContextKey, getAlphaReqBody(requestBody))
+		body, menu, err := getAlphaReqBody(requestBody)
+		if err != nil {
+			return r, fmt.Errorf("[orders] pos %s is not available. err: %s", requestBody.POS, err.Error())
+		}
+		ctx = context.WithValue(ctx, internal.BodyContextKey, body)
+		ctx = context.WithValue(ctx, internal.MenuContextKey, menu)
 	case "beta":
 		ctx = context.WithValue(ctx, internal.POSAddressContextKey,
 			fmt.Sprintf("http://%s"+"%s", h.betaClientBaseURL, internal.OrdersCreateBeta))
@@ -78,8 +83,8 @@ func (h *setOrderHandler) Process(r *http.Request) *http.Response {
 		unifiedBody := new(schema.OrderResponse) // desired response body to return
 		switch reqBody.POS {
 		case internal.POSAlpha:
-
-			if err = service.BuildRespFromAlphaOrder(reqBody, unifiedBody); err != nil {
+			menu := ctx.Value(internal.MenuContextKey).(*schema.AlphaMenu)
+			if err = service.BuildRespFromAlphaOrder(reqBody, unifiedBody, menu); err != nil {
 				resp.StatusCode = http.StatusInternalServerError
 			}
 		case internal.POSBeta:
@@ -100,16 +105,55 @@ func (h *setOrderHandler) Process(r *http.Request) *http.Response {
 	return resp
 }
 
-func getAlphaReqBody(body *schema.OrderRequest) io.ReadCloser {
-	var alphaReqProducts []schema.AlphaReqProduct
-	for _, item := range body.Items {
-		alphaReqProducts = append(alphaReqProducts,
-			schema.NewAlphaReqProduct(item.ID, item.Size, item.Ingredients, item.Quantity))
+func getAlphaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.AlphaMenu, error) {
+	// fetch beta menu to find corresponding category IDs for item IDs
+	menu := new(schema.AlphaMenu)
+	err := service.GetAlphaMenu(http.MethodGet, schema.NewAlphaMenuAddress(), menu)
+	if err != nil {
+		log.Printf("failed getting alpha menu, err: %s", err.Error())
+		return nil, menu, err
 	}
 
-	alphaBody, _ := service.EncodeReqRespBody(&schema.AlphaReqBody{OrderId: body.ID, Products: alphaReqProducts})
+	defaultIngredientIDsMap := make(map[string][]string)
+	allowedExtraIDsMap := make(map[string][]string)
+	for _, product := range menu.Products {
+		defaultIngredientIDsMap[product.ProductID] = product.DefaultIngredients
+		extras := make([]string, 0, len(product.Extras))
+		for _, extra := range product.Extras {
+			extras = append(extras, extra.IngredientID)
+		}
+		allowedExtraIDsMap[product.ProductID] = extras
+	}
 
-	return alphaBody
+	var alphaReqProducts []schema.AlphaReqProduct
+	for _, item := range body.Items {
+		ingredientIDs := make([]string, 0, len(item.Ingredients)+len(defaultIngredientIDsMap))
+	menuLevel:
+		for _, defaultIngredientID := range defaultIngredientIDsMap[item.ID] {
+			for _, ingredientID := range item.Ingredients {
+				if defaultIngredientID == ingredientID {
+					continue menuLevel
+				}
+			}
+			ingredientIDs = append(ingredientIDs, defaultIngredientID)
+		}
+		for _, allowedExtraID := range allowedExtraIDsMap[item.ID] {
+			for _, extraID := range item.Extras {
+				if allowedExtraID == extraID {
+					ingredientIDs = append(ingredientIDs, extraID)
+				}
+			}
+		}
+		alphaReqProducts = append(alphaReqProducts,
+			schema.NewAlphaReqProduct(item.ID, item.Size, ingredientIDs, item.Quantity))
+	}
+
+	alphaBody, err := service.EncodeReqRespBody(&schema.AlphaReqBody{OrderId: body.ID, Products: alphaReqProducts})
+	if err != nil {
+		log.Printf("failed encoding alpha body, err: %s", err.Error())
+		return nil, menu, err
+	}
+	return alphaBody, menu, nil
 }
 
 func getBetaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.BetaMenu, error) {
@@ -123,18 +167,33 @@ func getBetaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.BetaMenu,
 	}
 	var betaReqItems []schema.BetaReqItem
 	for _, item := range body.Items {
+		var allowedAddOns []string
 		var categoryId string
 		for catId, cat := range menu.Categories {
-			for itemId := range cat.Items {
+			for itemId, menuItem := range cat.Items {
 				if itemId == item.ID {
 					categoryId = catId
 				}
+				for _, addOn := range menuItem.AddOns {
+					for _, reqAddOn := range item.Extras {
+						if addOn.ID == reqAddOn {
+							allowedAddOns = append(allowedAddOns, addOn.ID)
+						}
+					}
+
+				}
+
 			}
 		}
+
 		betaReqItems = append(betaReqItems, schema.NewBetaReqItem(categoryId, item.ID,
-			item.Quantity, append(item.Extras, item.Ingredients...)))
+			item.Quantity, allowedAddOns))
 	}
-	betaBody, _ := service.EncodeReqRespBody(&schema.BetaReqBody{Id: body.ID, Items: betaReqItems})
+	betaBody, err := service.EncodeReqRespBody(&schema.BetaReqBody{Id: body.ID, Items: betaReqItems})
+	if err != nil {
+		log.Printf("failed encoding beta body, err: %s", err.Error())
+		return nil, menu, err
+	}
 	return betaBody, menu, nil
 }
 

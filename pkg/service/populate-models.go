@@ -13,7 +13,7 @@ func PopulateUnifiedOrderRespBody(reqBody *schema.OrderRequest, menu *schema.Men
 
 	itemMap := make(map[string]*schema.MenuItem)
 	sizeMap := make(map[string]map[string]*schema.MenuItemSize)
-	ingredientMap := make(map[string]map[string]*schema.MenuItemIngredient)
+	ingredientMap := make(map[string][]*schema.MenuItemIngredient)
 	extraMap := make(map[string]map[string]*schema.MenuItemExtra)
 	for _, menuCat := range menu.Categories {
 		for _, subCat := range menuCat.Subcategories {
@@ -23,10 +23,7 @@ func PopulateUnifiedOrderRespBody(reqBody *schema.OrderRequest, menu *schema.Men
 				for _, size := range item.Sizes {
 					sizeMap[item.ID][size.ID] = size
 				}
-				ingredientMap[item.ID] = make(map[string]*schema.MenuItemIngredient)
-				for _, ingredient := range item.Ingredients {
-					ingredientMap[item.ID][ingredient.ID] = ingredient
-				}
+				ingredientMap[item.ID] = item.Ingredients
 				extraMap[item.ID] = make(map[string]*schema.MenuItemExtra)
 				for _, extra := range item.Extras {
 					extraMap[item.ID][extra.ID] = extra
@@ -43,21 +40,18 @@ func PopulateUnifiedOrderRespBody(reqBody *schema.OrderRequest, menu *schema.Men
 		item.Name = itemMap[reqItem.ID].Name
 		price += sizeMap[reqItem.ID][reqItem.Size].Price * float32(item.Quantity)
 		item.Size = sizeMap[reqItem.ID][reqItem.Size].Name
-		if len(reqItem.Ingredients) == 0 {
-			ingredients := make([]string, 0, len(ingredientMap[reqItem.ID]))
-			for _, menuIngredient := range itemMap[reqItem.ID].Ingredients {
-				ingredients = append(ingredients, menuIngredient.Name)
-			}
-			item.Ingredients = ingredients
-		} else {
-			ingredients := make([]string, 0, len(reqItem.Ingredients))
-			for _, ingredientID := range reqItem.Ingredients {
-				if _, ok := ingredientMap[reqItem.ID][ingredientID]; ok {
-					ingredients = append(ingredients, ingredientMap[reqItem.ID][ingredientID].Name)
+
+		ingredients := make([]string, 0, len(ingredientMap[reqItem.ID]))
+	menuLevel:
+		for _, menuIngredient := range itemMap[reqItem.ID].Ingredients {
+			for _, reqIngredientID := range reqItem.Ingredients {
+				if reqIngredientID == menuIngredient.ID {
+					continue menuLevel
 				}
 			}
-			item.Ingredients = ingredients
+			ingredients = append(ingredients, menuIngredient.Name)
 		}
+		item.Ingredients = ingredients
 
 		extras := make([]string, 0, len(reqItem.Extras))
 		for _, extraID := range reqItem.Extras {
