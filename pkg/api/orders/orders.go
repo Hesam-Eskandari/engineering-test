@@ -157,7 +157,7 @@ func getAlphaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.AlphaMen
 }
 
 func getBetaReqBody(body *schema.OrderRequest) (io.ReadCloser, *schema.BetaMenu, error) {
-	// fetch beta menu to find corresponding category IDs for item IDs
+	// fetch beta menu
 	menu := new(schema.BetaMenu)
 	err := service.GetBetaMenu(http.MethodGet,
 		fmt.Sprintf("http://%s"+"%s", internal.BetaClientBaseURL, internal.Menu), menu)
