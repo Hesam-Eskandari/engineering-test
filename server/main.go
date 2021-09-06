@@ -43,12 +43,16 @@ func RegisterMux(router *mux.Router, handler apiHandler.Handler) *mux.Route {
 func RegisterHTTP(handler apiHandler.Handler) {
 	h := createHTTPHandler(handler)
 	http.HandleFunc(handler.URL(), func(w http.ResponseWriter, r *http.Request) {
+		notAllowed := true
 		for _, method := range handler.Methods() {
 			if method == r.Method {
 				h.ServeHTTP(w, r)
+				notAllowed = false
 			}
 		}
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		if notAllowed {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 		return
 	})
 }
@@ -85,23 +89,18 @@ func createHTTPHandler(handler apiHandler.Handler) http.Handler {
 				StatusCode: http.StatusBadRequest,
 			})
 			if err2 != nil {
-				// this should be a log instead of print in real application
-				fmt.Printf("createHTTPHandler: Error encoding response writer")
+				log.Printf("createHTTPHandler: Error encoding response writer")
 			}
 			return
 		}
 
 		resp := handler.Process(request)
-		if resp.StatusCode >= http.StatusBadRequest {
-			// Todo
-		}
 		w.WriteHeader(resp.StatusCode)
 		if resp.StatusCode == http.StatusOK {
 			defer resp.Body.Close()
 			body, _ := ioutil.ReadAll(resp.Body)
-			// fmt.Println("body", body)
-			if _, err := w.Write(body); err != nil {
-				log.Fatalf("Error writing response body to writer")
+			if _, err = w.Write(body); err != nil {
+				log.Fatalf("Error writing response body to writer. err: %s", err.Error())
 			}
 		}
 		return
