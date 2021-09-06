@@ -5,7 +5,7 @@ type OrderItem struct {
 	Quantity    int      `json:"quantity"`
 	Size        string   `json:"size_id"`
 	Ingredients []string `json:"ingredient_ids"`
-	Extras      []string `json:"extras"`
+	Extras      []string `json:"extra_ids"`
 }
 
 type OrderRequest struct {
@@ -15,18 +15,19 @@ type OrderRequest struct {
 }
 
 type OrderResponseItem struct {
-	Name     string   `json:"name"`
-	Quantity int      `json:"quantity"`
-	Size     string   `json:"size"`
-	Extras   []string `json:"extras"`
-	Price    float32  `json:"price"`
+	Name        string   `json:"name"`
+	Quantity    int      `json:"quantity"`
+	Size        string   `json:"size"`
+	Extras      []string `json:"extras"`
+	Ingredients []string `json:"ingredients"`
+	Price       float32  `json:"price"`
 }
 
 type OrderResponse struct {
-	ID         string              `json:"id"`          // order id
-	POS        string              `json:"pos"`         // pos
-	Items      []OrderResponseItem `json:"items"`       // order items
-	TotalPrice float32             `json:"total_price"` // total price
+	ID         string               `json:"id"`          // order id
+	POS        string               `json:"pos"`         // pos
+	Items      []*OrderResponseItem `json:"items"`       // order items
+	TotalPrice float32              `json:"total_price"` // total price
 }
 
 type AlphaReqBody struct {
