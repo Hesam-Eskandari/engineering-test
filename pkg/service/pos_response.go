@@ -7,36 +7,24 @@ import (
 	"github.com/flypay/engineering-test/pkg/internal/schema"
 )
 
-func BuildRespFromAlphaOrder(resp *http.Response, reqBody *schema.OrderRequest) *http.Response {
-
-	// response body from alpha pos
-	var unifiedBody schema.OrderResponse // desired response body to return
+func BuildRespFromAlphaOrder(reqBody *schema.OrderRequest, unifiedBody *schema.OrderResponse) error {
+	unifiedMenu := new(schema.Menu)
 	var err error
-
-	populateUnifiedRespBodyForAlpha(reqBody, &unifiedBody)
-
-	if resp.Body, err = EncodeReqRespBody(unifiedBody); err != nil {
-		log.Fatalf("failed encoding: incompatible schema: %v", unifiedBody)
+	alphaMenu := new(schema.AlphaMenu)
+	if err = GetAlphaMenu(http.MethodGet, schema.NewAlphaMenuAddress(), alphaMenu); err != nil {
+		log.Printf("failed encoding: error: %s", err.Error())
+		return err
 	}
-	return resp
+	PopulateUnifiedMenuFromAlphaMenu(alphaMenu, unifiedMenu)
+	PopulateUnifiedOrderRespBody(reqBody, unifiedMenu, unifiedBody)
+	return nil
 }
 
-func BuildRespFromBetaOrder(resp *http.Response, reqBody *schema.OrderRequest,
-	alphaMenu *schema.BetaMenu) *http.Response {
-
-	body := schema.BetaRespBody{}
-
-	var unifiedBody schema.OrderResponse // desired response body to return
-	var err error
-	if err = DecodeReqRespBody(resp.Body, &body); err != nil {
-		log.Fatalf("failed decoding:, incompatible response body: %v", resp.Body)
-	}
-
-	populateUnifiedRespBodyForBeta(reqBody, &unifiedBody, alphaMenu)
-	if resp.Body, err = EncodeReqRespBody(unifiedBody); err != nil {
-		log.Fatalf("failed encoding: incompatible schema: %v", body)
-	}
-	return resp
+func BuildRespFromBetaOrder(reqBody *schema.OrderRequest, betaMenu *schema.BetaMenu, unifiedBody *schema.OrderResponse) error {
+	unifiedMenu := new(schema.Menu)
+	PopulateUnifiedMenuFromBetaMenu(betaMenu, unifiedMenu)
+	PopulateUnifiedOrderRespBody(reqBody, unifiedMenu, unifiedBody)
+	return nil
 }
 
 func GetAlphaMenu(method string, destination *schema.AlphaMenuAddress, alphaMenu *schema.AlphaMenu) error {
