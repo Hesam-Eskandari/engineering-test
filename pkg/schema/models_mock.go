@@ -725,3 +725,146 @@ func NewUnifiedMenuPopulatedBetaMenuMock() (beta *Menu) {
 	}
 	return
 }
+
+// NewUnifiedRespPopulatedAlphaOrderRespMock returns a unified response populated by mocked alpha response
+func NewUnifiedRespPopulatedAlphaOrderRespMock() (resp *OrderResponse) {
+	resp = new(OrderResponse)
+	resp.POS = internal.POSAlpha
+	resp.ID = "12345"
+	resp.TotalPrice = 48.68
+	resp.Items = []*OrderResponseItem{
+		{
+			Name:        "Mushroom Burger",
+			Quantity:    1,
+			Size:        "Individual",
+			Extras:      []string{"Extra Mayo"},
+			Ingredients: []string{"Seeded Bun", "Mushroom Patty", "Lettuce"},
+			Price:       15.94,
+		},
+		{
+			Name:        "Buttermilk Chicken Burger",
+			Quantity:    1,
+			Size:        "Individual",
+			Extras:      []string{},
+			Ingredients: []string{"Brioche Bun", "Chicken Patty", "Pickles", "Slaw"},
+			Price:       15.95,
+		},
+		{
+			Name:        "Fries",
+			Quantity:    2,
+			Size:        "Regular",
+			Extras:      []string{"Paprika Salt"},
+			Ingredients: []string{},
+			Price:       8.89,
+		},
+		{
+			Name:        "Fizzy Cola",
+			Quantity:    2,
+			Size:        "Large",
+			Extras:      []string{},
+			Ingredients: []string{},
+			Price:       7.9,
+		},
+	}
+	return
+}
+
+// NewUnifiedRespPopulatedBetaOrderRespMock returns a unified response populated by mocked beta response
+func NewUnifiedRespPopulatedBetaOrderRespMock() (resp *OrderResponse) {
+	resp = new(OrderResponse)
+	resp.ID = "54321"
+	resp.POS = internal.POSBeta
+	resp.TotalPrice = 17.79
+	resp.Items = []*OrderResponseItem{
+		{
+			Name:        "Falafel Wrap",
+			Quantity:    1,
+			Size:        "Regular",
+			Extras:      []string{"Extra Chilli Sauce"},
+			Ingredients: []string{},
+			Price:       11.09,
+		},
+		{
+			Name:        "Jam Donut",
+			Quantity:    2,
+			Size:        "Regular",
+			Extras:      []string{},
+			Ingredients: []string{},
+			Price:       2.7,
+		},
+		{
+			Name:        "Bottled Water",
+			Quantity:    1,
+			Size:        "Regular",
+			Extras:      []string{},
+			Ingredients: []string{},
+			Price:       4,
+		},
+	}
+	return
+}
+
+// NewUnifiedOrderRequestPopulatedOrderAlphaMock returns a unified request body mocking a request from alpha
+func NewUnifiedOrderRequestPopulatedOrderAlphaMock() (order *OrderRequest) {
+	order = new(OrderRequest)
+	order.POS = internal.POSAlpha
+	order.ID = "12345"
+	order.Items = []OrderItem{
+		{
+			ID:          "6001",
+			Quantity:    1,
+			Size:        "8001",
+			Ingredients: []string{"9004"},
+			Extras:      []string{"9010"},
+		},
+		{
+			ID:          "6002",
+			Quantity:    1,
+			Size:        "8001",
+			Ingredients: []string{},
+			Extras:      []string{},
+		},
+		{
+			ID:          "6003",
+			Quantity:    2,
+			Size:        "8005",
+			Ingredients: []string{},
+			Extras:      []string{"9009"},
+		},
+		{
+			ID:          "6004",
+			Quantity:    2,
+			Size:        "8006",
+			Ingredients: []string{},
+			Extras:      []string{},
+		},
+	}
+	return
+}
+
+// NewUnifiedOrderRequestPopulatedOrderBetaMock returns a unified request body mocking a request from beta
+func NewUnifiedOrderRequestPopulatedOrderBetaMock() (order *OrderRequest) {
+	order = new(OrderRequest)
+	order.POS = internal.POSBeta
+	order.ID = "54321"
+	order.Items = []OrderItem{
+		{
+			ID:          "hjrlho",
+			Quantity:    1,
+			Size:        "hjrlho",
+			Ingredients: []string{},
+			Extras:      []string{"cbnufj"},
+		},
+		{
+			ID:       "ukhqnd",
+			Quantity: 2,
+			Size:     "ukhqnd",
+		},
+		{
+			ID:       "ugqcbb",
+			Quantity: 1,
+			Size:     "ugqcbb",
+		},
+	}
+	return
+}
