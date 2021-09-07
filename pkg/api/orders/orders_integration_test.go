@@ -7,7 +7,8 @@ import (
 	"testing"
 
 	"github.com/flypay/engineering-test/pkg/internal"
-	"github.com/flypay/engineering-test/pkg/internal/schema"
+	"github.com/flypay/engineering-test/pkg/repository"
+	"github.com/flypay/engineering-test/pkg/schema"
 	"github.com/flypay/engineering-test/pkg/service"
 )
 
@@ -22,12 +23,14 @@ func TestAlphaOrderResponse(t *testing.T) {
 	//		Paprika Salt
 	//  2x Large Fizzy Cola
 	requestOrder := setUpAlphaOrder()
-	requestPayload, _ := service.EncodeReqRespBody(requestOrder)
+	repo := repository.NewRepositoryImpl()
+	serv := service.NewServiceImpl()
+	requestPayload, _ := repo.EncodeReqRespBody(requestOrder)
 	alphaOrderResponse := new(schema.OrderResponse)
-	alphaOrderResp := service.RequestPOSClient(http.MethodPost,
+	alphaOrderResp := serv.RequestPOSClient(http.MethodPost,
 		fmt.Sprintf("http://:8086"+internal.Orders), requestPayload)
 
-	if err := service.DecodeReqRespBody(alphaOrderResp.Body, alphaOrderResponse); err != nil {
+	if err := repo.DecodeReqRespBody(alphaOrderResp.Body, alphaOrderResponse); err != nil {
 		t.Fatalf("failed decoding body resp. err: %s", err.Error())
 	}
 	expectedResponse := setUpAlphaResponse()
@@ -37,12 +40,14 @@ func TestAlphaOrderResponse(t *testing.T) {
 // TestBetaOrderResponse calls unified service url to set an order to beta pos
 func TestBetaOrderResponse(t *testing.T) {
 	requestOrder := setUpBetaOrder()
-	requestPayload, _ := service.EncodeReqRespBody(requestOrder)
+	repo := repository.NewRepositoryImpl()
+	serv := service.NewServiceImpl()
+	requestPayload, _ := repo.EncodeReqRespBody(requestOrder)
 	betaOrderResponse := new(schema.OrderResponse)
-	betaOrderResp := service.RequestPOSClient(http.MethodPost,
+	betaOrderResp := serv.RequestPOSClient(http.MethodPost,
 		fmt.Sprintf("http://:8086"+internal.Orders), requestPayload)
 
-	if err := service.DecodeReqRespBody(betaOrderResp.Body, betaOrderResponse); err != nil {
+	if err := repo.DecodeReqRespBody(betaOrderResp.Body, betaOrderResponse); err != nil {
 		t.Fatalf("failed decoding body resp. err: %s", err.Error())
 	}
 	expectedResponse := setUpBetaResponse()
@@ -51,8 +56,9 @@ func TestBetaOrderResponse(t *testing.T) {
 
 // assertEqualOrders runs deep equal on two order response bodies and compares them
 func assertEqualOrders(t *testing.T, expectedModel, retrievedModel *schema.OrderResponse) {
-	service.SortUnifiedResponse(expectedModel)
-	service.SortUnifiedResponse(retrievedModel)
+	repo := repository.NewRepositoryImpl()
+	repo.SortUnifiedResponse(expectedModel)
+	repo.SortUnifiedResponse(retrievedModel)
 	if !reflect.DeepEqual(expectedModel, retrievedModel) {
 		t.Fatal("The two struct are not equal")
 	}
