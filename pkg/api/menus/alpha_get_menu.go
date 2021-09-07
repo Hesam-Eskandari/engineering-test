@@ -8,19 +8,30 @@ import (
 
 	"github.com/flypay/engineering-test/pkg/api/apiHandler"
 	"github.com/flypay/engineering-test/pkg/internal"
-	"github.com/flypay/engineering-test/pkg/internal/schema"
+	"github.com/flypay/engineering-test/pkg/repository"
+	"github.com/flypay/engineering-test/pkg/schema"
 	"github.com/flypay/engineering-test/pkg/service"
 )
 
 // getAlphaMenuHandler handles the request of getting alpha's menu
 type getAlphaMenuHandler struct {
-	clientBaseURL string
+	service service.Service
+	repo    repository.Repository
 }
 
 // NewGetAlphaMenu returns an instance of getAlphaMenuHandler
 func NewGetAlphaMenu() apiHandler.Handler {
 	return &getAlphaMenuHandler{
-		clientBaseURL: internal.AlphaClientBaseURL,
+		service: service.NewServiceImpl(),
+		repo:    repository.NewRepositoryImpl(),
+	}
+}
+
+// NewGetMockAlphaMenu returns an instance of getAlphaMenuHandler
+func NewGetMockAlphaMenu() apiHandler.Handler {
+	return &getAlphaMenuHandler{
+		service: service.NewServiceMock(),
+		repo:    repository.NewRepositoryImpl(),
 	}
 }
 
@@ -52,15 +63,17 @@ func (h *getAlphaMenuHandler) Process(r *http.Request) *http.Response {
 	alphaAddress := ctx.Value(internal.POSAddressContextKey).(*schema.AlphaMenuAddress)
 
 	alphaMenu := new(schema.AlphaMenu)
-	if err := service.GetAlphaMenu(method, alphaAddress, alphaMenu); err != nil {
+	if err := h.service.GetAlphaMenu(method, alphaAddress, alphaMenu); err != nil {
 		log.Printf("error getting menu from alpha pos. err: %s", err.Error())
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Status = fmt.Sprintf("failed getting menu from alpha pos")
 		return resp
 	}
+	fmt.Println("alphaMenu", alphaMenu)
 	unifiedMenu := new(schema.Menu)
-	service.PopulateUnifiedMenuFromAlphaMenu(alphaMenu, unifiedMenu)
-	body, err := service.EncodeReqRespBody(unifiedMenu)
+	h.repo.PopulateUnifiedMenuFromAlphaMenu(alphaMenu, unifiedMenu)
+	h.repo.SortUnifiedMenu(unifiedMenu)
+	body, err := h.repo.EncodeReqRespBody(unifiedMenu)
 	if err != nil {
 		fmt.Printf("err reached, err: %v", err.Error())
 	}
